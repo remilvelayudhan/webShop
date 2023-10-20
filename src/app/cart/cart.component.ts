@@ -1,4 +1,8 @@
 import { Component } from '@angular/core';
+import { Cart, CartItem } from '../Model/cart';
+import { HttpClient } from '@angular/common/http';
+import { Subscription } from 'rxjs';
+import { CartService } from '../services/cart.service';
 
 @Component({
   selector: 'app-cart',
@@ -6,5 +10,53 @@ import { Component } from '@angular/core';
   styleUrls: ['./cart.component.scss']
 })
 export class CartComponent {
+  cart: Cart = { items: [] };
+  displayedColumns: string[] = [
+    'product',
+    'name',
+    'price',
+    'quantity',
+    'total',
+    'action',
+  ];
+  dataSource: CartItem[] = [];
+  cartSubscription: Subscription | undefined;
 
+  constructor(private cartService: CartService, private http: HttpClient) {}
+
+  ngOnInit(): void {
+    this.cartSubscription = this.cartService.cart.subscribe((_cart: Cart) => {
+      this.cart = _cart;
+      this.dataSource = _cart.items;
+    });
+  }
+
+  getTotal(items: CartItem[]): number {
+    return this.cartService.getTotal(items);
+  }
+
+  onAddQuantity(item: CartItem): void {
+    this.cartService.addToCart(item);
+  }
+
+  onRemoveFromCart(item: CartItem): void {
+    this.cartService.removeFromCart(item);
+  }
+
+  onRemoveQuantity(item: CartItem): void {
+    this.cartService.removeQuantity(item);
+  }
+
+  onClearCart(): void {
+    this.cartService.clearCart();
+  }
+
+  onCheckout(): void {
+  }
+
+  ngOnDestroy() {
+    if (this.cartSubscription) {
+      this.cartSubscription.unsubscribe();
+    }
+  }
 }
